@@ -17,3 +17,7 @@ move disc 3 from Src to Dst
 move disc 1 from Aux to Src
 move disc 2 from Aux to Dst
 move disc 1 from Src to Dst
+
+var walk_the_DOM = function walk(node,func){
+    
+}
