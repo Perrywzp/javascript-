@@ -261,8 +261,39 @@ document.writeln('&lt;&quot;&gt;'.deentityify());
 //模块模式非常有效。
 //
 //模块模式也可以用来产生安全的对象。假定我们想要构造一个用来生产生序列号的对象：
-//
-
+var serial_maker = function () {
+    //返回一个用来产生唯一字符串的对象.
+    //唯一字符串由两个部分组成:前缀+序列号.
+    //该对象包含一个设置前缀的方法,一个设置序列号的方法.
+    //和一个产生唯一字符串的gensym方法.
+    var prefix = '';
+    var seq = 0;
+    return {
+        set_prefix: function (p) {
+            prefix = String(p);
+        },
+        set_seq: function (s) {
+            seq = s;
+        },
+        gensym:function(){
+            var result = prefix + seq;
+            seq += 1;
+            return result;
+        }
+    }
+};
+var seqer = serial_maker();
+seqer.set_prefix('Q');
+seqer.set_seq(1000);
+var unique = seqer.gensym();
+console.log("+++++++++++++++++++++\n");
+console.log( unique + "\n");
+console.log("+++++++++++++++++++++\n");
+//seqer包含的方法都没有用到this或thar,因此没有办法损害seqer.除非调用对应的方法,否则没法改变prefix 或 seq的值
+//seqer对象是可变的,所以它的方法可能会被替换掉,但替换后的方法依然不能访问私有成员.seqer就是一组函数的集合,而且那些
+//函数被授予特权,拥有使用或修改私有状态的能力.
+//如果我们把seqer.gensym作为一个值传递给第三方函数,那个函数能 用它产生唯一字符串,但却不能通过它来改变prefix 或seq
+//的值.
 
 
 
