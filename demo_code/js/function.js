@@ -227,7 +227,7 @@ var add_the_handlers2 = function(nodes) {
 //局变量是魔鬼。我们可以把它定义在该函数的内部，但是那会带来运行时的损耗，因为每次执行该函数的时候该字面量都会被求值一次。理
 //想的方式是把它放入一个闭包，而且也许还能提供一个增加更多字符实体的扩展方法：
 
-String.method('deentityify',function(){
+String.method('deentityify', function() {
     //字符实体表。它映射字符实体的名字到对应的字符。
     var entity = {
         quot: '"',
@@ -235,14 +235,14 @@ String.method('deentityify',function(){
         gt: '>'
     };
     //返回deentityify方法
-    
-    return function(){
 
-    //这才是deentityify方法。它调用字符串的replace方法，
-    //查找'&'开头和';'结束的子字符串。如果这些字符可以在字符实体表中找到，
-    //那么就将该字符实体替换为映射表中的值。它用到了一个正则表达式
+    return function() {
+
+        //这才是deentityify方法。它调用字符串的replace方法，
+        //查找'&'开头和';'结束的子字符串。如果这些字符可以在字符实体表中找到，
+        //那么就将该字符实体替换为映射表中的值。它用到了一个正则表达式
         return this.replace(/&([^&;]+);/g,
-            function(a,b){
+            function(a, b) {
                 var r = entity[b];
                 return typeof r === 'string' ? r : a;
             }
@@ -261,7 +261,7 @@ document.writeln('&lt;&quot;&gt;'.deentityify());
 //模块模式非常有效。
 //
 //模块模式也可以用来产生安全的对象。假定我们想要构造一个用来生产生序列号的对象：
-var serial_maker = function () {
+var serial_maker = function() {
     //返回一个用来产生唯一字符串的对象.
     //唯一字符串由两个部分组成:前缀+序列号.
     //该对象包含一个设置前缀的方法,一个设置序列号的方法.
@@ -269,13 +269,13 @@ var serial_maker = function () {
     var prefix = '';
     var seq = 0;
     return {
-        set_prefix: function (p) {
+        set_prefix: function(p) {
             prefix = String(p);
         },
-        set_seq: function (s) {
+        set_seq: function(s) {
             seq = s;
         },
-        gensym:function(){
+        gensym: function() {
             var result = prefix + seq;
             seq += 1;
             return result;
@@ -287,7 +287,7 @@ seqer.set_prefix('Q');
 seqer.set_seq(1000);
 var unique = seqer.gensym();
 console.log("+++++++++++++++++++++\n");
-console.log( unique + "\n");
+console.log(unique + "\n");
 console.log("+++++++++++++++++++++\n");
 //seqer包含的方法都没有用到this或thar,因此没有办法损害seqer.除非调用对应的方法,否则没法改变prefix 或 seq的值
 //seqer对象是可变的,所以它的方法可能会被替换掉,但替换后的方法依然不能访问私有成员.seqer就是一组函数的集合,而且那些
@@ -295,16 +295,116 @@ console.log("+++++++++++++++++++++\n");
 //如果我们把seqer.gensym作为一个值传递给第三方函数,那个函数能 用它产生唯一字符串,但却不能通过它来改变prefix 或seq
 //的值.
 
+//级联 Cascade
+//有一些方法没有返回值.例如,一些设置或修改对象的某个状态却不返回任何值的方法就是典型的例子.
+//如果我们让这些方法返回this而不是undefined,就可以启用级联.在一个级联中,我们可以单独单独一条语句
+//中依次掉用一个对象的很多方法。一个启用级联的ajax类库可能允许我们以这样的形式去编码：
+// getElement('myBoxDiv')
+//     .move(350,150)
+//     .width(100)
+//     .height(100)
+//     .color('red')
+//     .border('10px outset')
+//     .padding('4px')
+//     .appendText("please stand by")
+//     .on('mousedown',function(m){
+//         this.startDrag(m,this.getNinth(m));
+//     })
+//     .on('mousemove','drag')
+//     .on('mouseup','stopDrag')
+//     .later(2000,function(){
+//         this
+//             .color('yellow')
+//             .setHTML("what hath God wraught?")
+//             .slide(400,40,200,200);
+//     })
+//     .tip('This box is resizeable');
+//     
+//在这个例子中，getElement函数产生一个对应于id = "myBoxDiv" 的DOM元素且给其注入了其他功能的对象。该方法允许我们移动元素，
+//修改它的尺寸和样式，并添加行为。这些方法每一个都返回该对象，所以每次调用返回的结果可以被下一次调用所用。
+//
+//级联技术可以产生出极富表现力的接口。它也能给那波构造“全能”接口的热潮降降温，一个接口没必要一次做太多事情。
+//          
+
+//柯里化 Curry
+//函数也是值，从而我们可以用有趣的方式去操作函数值。柯里化允许我们把函数与传递给它的参数相结合，产生出一个新的函数。
+var add1 = add.curry(1),
+    document.writeln(add1(6));
+//add1 是把1传递给add函数的curry方法后创建的一个函数。add1函数把传递给它的参数的值加1。javascript 并没有curry方法，但我们可以给
+//Function.property扩展此功能：
+Function.method('curry', function() {
+    var args = arguments,
+        that = this;
+    return function() {
+        return that.apply(null, args.concat(arguments));
+    };
+});
+//curyy方法通过创建一个保存着原始函数和要被套用的参数的闭包来工作。它返回另一个函数，该函数被调用时，会返回调用原始函数的结果，
+//并传递调用curry时的参数加上当前的参数。它使用Array的concat方法连接两个参数数组。
+//糟糕的是，就像我们先前看到的那样，arguments 数组并非一个真正的数组，所以它并没有concat方法。要避开这个问题，我们必须在两个
+//arguments数组上都应用数组的slice方法。这样产生出拥有concat方法的常规数组。
+Function.method('curry', function() {
+    var slice = Array.prototype.slice,
+        args = slice.apply(arguments);
+    that = this;
+    return function() {
+        return that.apply(null, args.concat(slice.apply(arguments)));
+    };
+});
 
 
+//记忆 Memoization
+//函数可以将先前操作的结果记录在某个对象里，从而避免无谓的重复运算。这种优化被称为记忆（ memoization）。javascript 的对象和数组
+//要实现这种优化是非常方便的。
+//比如说，我们想要一个递归函数来计算Fibonacci数列。一个Fibonacci数字是之前两个Fibonacci数字之和。最前面的两个数字之和。最前面
+//两个数字是0和1。
+var fibonacci = function(n) {
+    return n < 2 ? n : fibonacci(n - 1) + fibonacci(n - 2);
+};
 
+for(var i = 0 ; i <= 10 ; i += 1){
+    document.writeln('//' + i + ': ' + fibonacci(i));
+}
 
+//这样是可以工作的，但它做了很多无谓的工作。fibonacci函数被调用了453次。我们调用了11次，而它自身调用了442次去计算可能已被刚计算
+//过的值。如果我们让该函数具备记忆功能，就可以显著地减少运算量。
 
+//我们在一个名为memo的数组里保存我们的存储结果，存储结果可以隐藏在闭包中。当函数被调用时，这个函数首先检查结果是否已存在，如果已经存在
+//就立即返回这个结果。
 
+var fibonacci = function(){
+    var memo = [0,1];
+    var fib = function(n){
+        var result = memo[n];
+        if(typeof result !== 'number'){
+            result = fib(n - 1) + fib(n - 2);
+            memo[n] = result;
+        }
+        return result;
+    };
+    return fib;
+}();
+//这个函数返回同样的结果，但它只被调用了29次。我们调用了它11次，它调用了自己18次去取得之前存储的结果。
 
+//我们可以把这种技术推而广之，编写一个函数来帮助我们构造带记忆功能的函数。memoizer函数取得一个初始的memo数组。
+//
+var memoizer = function(memo,formula){
+    var recur = function(n){
+        var result = memo[n];
+        if(typeof result !== 'number'){
+            result = formula (recur,n);
+            memo[n] = result;
+        }
+        return result;
+    };
+    return recur;
+};
+//现在我们可以使用memoizer函数来定义fibonacci函数，提供其初始的memo数组和formula函数：
+var fibonacci = memoizer([0,1],function(recur,n){
+    return recur(n - 1) + recur(n - 2);
+});
 
-
-
-
-
-
+//通过设计这种产生另一函数的函数，极大地减少了我们的工作量。例如，要产生一个可记忆的阶乘函数，我们只需提供基本的阶乘公式即可：
+var factorial = memoizer([1,1],function(recur,n){
+    return n * recur(n - 1);
+});
