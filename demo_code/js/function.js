@@ -1,3 +1,143 @@
+//函数字面量 Function Literal
+var add = function(a, b) {
+    return a + b;
+};
+//一个内部函数除了可以访问自己的参数和变量，同时它也能自由访问把它嵌套在其中的父函数的参数与变量。
+//通过函数字面量创建的函数对象包含一个连到外部上下文的连接。这被称为闭包（closure）。
+//它是javascript强大表现力的来源
+
+
+//4种调用模式
+//方法调用模式 the Method Invocation Pattern
+//当一个函数被保存为对象的一个属性时，我们称它为一个方法。当一个方法被调用时，this被绑定到该对象。
+//
+var myObject = {
+    value:0,
+    increment:function(inc){
+        this.value += typeof inc === 'number' ? inc : 1;
+    } 
+};
+
+myObject.increment();
+document.writeln(myObject.value + '<br/>');
+
+myObject.increment(2);
+document.writeln(myObject.value + '<br/>');
+
+
+//this到对象的绑定发生在调用的时候。这个"超级"延迟绑定(very late binding)使得函数可以对this高度复用。
+//通过this可以取得它们所属对象的上下文的方法称为公共方法
+
+
+//函数调用模式 the Function Invocation Pattern
+//当一个函数并非一个对象的属性时，那么它就是被当做一个函数来调用的：
+//这个设计错误的后果就是方法不能利用内部函数来帮助它工作，因为内部函数的this绑定了错误的值，所以不能共享
+//该方法对对象的访问权。幸运的是，有一个很容易的解决方案：如果该方法定义一个变量并给它赋值为this,那么内部
+//函数就可以通过那个变量访问到this。按照约定，我把那个变量命名为that:
+
+//给myObject增加一个double方法
+myObject.double = function(){
+    var that = this; //解决方法
+    var helper = function(){
+        that.value = add(that.value,that.value);
+    };
+    helper();
+};
+myObject.double();
+document.writeln(myObject.value);
+
+
+//构造器调用模式 the Constructor Invocation Pattern
+//javascript是一门基于原型继承的语言。这意味着对象可以直接从其他对象继承属性。
+//如果在一个函数前面带上new来调用，那么背地里将会创建一个连接到该函数的prototype成员的新对象，同时this
+//会被绑定到那个新对象上。
+//new前缀也会改变return 语句的行为。
+//创建一个名为Quo 的构造器函数。它构造一个带有status s属性的对象。
+var Quo = function(string){
+    this.status = string;
+};
+//给Quo的所有实例提供一个名为get_status的公共方法。
+Quo.prototype.get_status = function(){
+    return this.status;
+};
+//构造一个Quo实例
+var myQuo = new Quo("confused");
+document.writeln(myQuo.get_status() + '<br/>');
+
+//一个函数，如果创建的目的就是希望结合new前缀来调用，那它就被称为构造器函数。
+//按造约定，他们保存在以答谢格式命名的变量里。如果调用构造器函数时没有在前面加上new,
+//可能会发生非常糟糕的事情，既没有编译警告，也没有运行时警告，所以大写约定非常重要。
+
+
+//Apply调用模式 the Apply Invocation Pattern
+//因为Javascript是一门函数式的面向对象编程语言，所以函数可以拥有方法。
+//
+//apply方法让我们构建一个函数传递给调用函数。它也允许我们选择this的值。apply方法让我们
+//构建一个参数，第一个是要绑定给this的值，第2个就是一个参数数组。
+//构造一个包含两个数字的数组，并将它们相加。
+var array = [3,4];
+var sum = add.apply(null,array);
+
+//构造一个包含status成员的对象。
+var statusObject ={
+    status:'A-OK'
+};
+//statusObject并没有继承自Quo.prototype,但我们可以再statusObject上调用get_status方法，尽管
+//statusObject并没有一个名为get_status的方法。
+
+var status = Quo.prototype.get_status.apply(statusObject);
+
+
+//参数 Arguments 
+//当函数被调用时，会得到一个“免费”配送的参数，那就是arguments数组。函数可以通过此参数访问所有它
+//被调用时传递给它的参数列表，包括那些没有被分配给函数声明时定义的形式参数的多余参数。这使得编写一个
+//无须指定参数个数的函数成为可能：
+//构造一个将大量的值相加的函数。
+//注意该函数内部定义的变量sum不会与函数外部定义的sum产生冲突。
+//该函数只会看到内部那个变量。
+var sum = function (){
+    var i ,sum = 0;
+    for(i = 0 ; i < arguments.length ; i += 1){
+        sum += arguments[i];
+    }
+    return sum;
+};
+document.writeln(sum(4,8,15,16,23,42) + '<br/>'); //408
+
+//这不是一个特别有用的模式。在第6章，我们会看到如何给数组添加一个相似的方法达到同样的效果。、
+
+//因为语言的一个设计错误，arguments并不是一个真正的数组。它只是一个“类似数组”的对象。
+//arguments拥有一个length属性，但它没有任何数组的方法。我们将在本章结尾看这个设计错误导致的后果。
+
+
+//返回 Return 
+//如果函数调用时在前面加上了new 前缀，且返回值不是一个对象，则返回this(该新对象)。
+
+
+//异常 Exceptions
+//异常是干扰程序的正常流程的不寻常（但并非完全出乎意料的）的事故。当发现这样的事故时，你的程序
+//应该抛出一个异常：
+var add = function(a,b){
+    if(typeof a !== 'number' || typeof b !== 'number'){
+        throw {
+            name:'TypeError',
+            message:'add needs numbers'
+        };
+    }
+    return a + b;
+};
+//throw语句中断函数的执行。它应该抛出一个exception对象，该对象包含一个用来识别异常类型的name属性
+//和一个描述性的message属性。你也可以添加其他的属性。
+//改exception对象将被传递到一个try语句的catch从句：
+//构造一个try_it函数，以不正确的方式调用之前的add函数。
+var try_it = function(){
+    try{
+        add("seven");
+    } catch (e){
+        document.writeln(e.name + ': ' + e.message + '<br/>');
+    }
+};
+try_it();
 //扩展类型的功能 Augmenting Types
 //function.prototype 增加方法来使得该方法对所有函数可用：
 
@@ -328,8 +468,8 @@ console.log("+++++++++++++++++++++\n");
 
 //柯里化 Curry
 //函数也是值，从而我们可以用有趣的方式去操作函数值。柯里化允许我们把函数与传递给它的参数相结合，产生出一个新的函数。
-var add1 = add.curry(1),
-    document.writeln(add1(6));
+var add1 = add.curry(1);
+document.writeln(add1(6));
 //add1 是把1传递给add函数的curry方法后创建的一个函数。add1函数把传递给它的参数的值加1。javascript 并没有curry方法，但我们可以给
 //Function.property扩展此功能：
 Function.method('curry', function() {
@@ -362,7 +502,7 @@ var fibonacci = function(n) {
     return n < 2 ? n : fibonacci(n - 1) + fibonacci(n - 2);
 };
 
-for(var i = 0 ; i <= 10 ; i += 1){
+for (var i = 0; i <= 10; i += 1) {
     document.writeln('//' + i + ': ' + fibonacci(i));
 }
 
@@ -372,11 +512,11 @@ for(var i = 0 ; i <= 10 ; i += 1){
 //我们在一个名为memo的数组里保存我们的存储结果，存储结果可以隐藏在闭包中。当函数被调用时，这个函数首先检查结果是否已存在，如果已经存在
 //就立即返回这个结果。
 
-var fibonacci = function(){
-    var memo = [0,1];
-    var fib = function(n){
+var fibonacci = function() {
+    var memo = [0, 1];
+    var fib = function(n) {
         var result = memo[n];
-        if(typeof result !== 'number'){
+        if (typeof result !== 'number') {
             result = fib(n - 1) + fib(n - 2);
             memo[n] = result;
         }
@@ -388,11 +528,11 @@ var fibonacci = function(){
 
 //我们可以把这种技术推而广之，编写一个函数来帮助我们构造带记忆功能的函数。memoizer函数取得一个初始的memo数组。
 //
-var memoizer = function(memo,formula){
-    var recur = function(n){
+var memoizer = function(memo, formula) {
+    var recur = function(n) {
         var result = memo[n];
-        if(typeof result !== 'number'){
-            result = formula (recur,n);
+        if (typeof result !== 'number') {
+            result = formula(recur, n);
             memo[n] = result;
         }
         return result;
@@ -400,11 +540,11 @@ var memoizer = function(memo,formula){
     return recur;
 };
 //现在我们可以使用memoizer函数来定义fibonacci函数，提供其初始的memo数组和formula函数：
-var fibonacci = memoizer([0,1],function(recur,n){
+var fibonacci = memoizer([0, 1], function(recur, n) {
     return recur(n - 1) + recur(n - 2);
 });
 
 //通过设计这种产生另一函数的函数，极大地减少了我们的工作量。例如，要产生一个可记忆的阶乘函数，我们只需提供基本的阶乘公式即可：
-var factorial = memoizer([1,1],function(recur,n){
+var factorial = memoizer([1, 1], function(recur, n) {
     return n * recur(n - 1);
 });
