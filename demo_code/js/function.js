@@ -390,7 +390,7 @@ String.method('deentityify', function() {
     };
 }());
 //请注意最后一行。我们用()运算法立刻调用我们刚刚构造出来的函数。这个调用所创建并返回的函数才是deentityify方法。
-document.writeln('&lt;&quot;&gt;'.deentityify());
+document.writeln('&lt;&quot;&gt;'.deentityify() + '<br/>');
 //模块模式利用了函数作用域和闭包来创建被绑定对象与私有成员的关联，在这个例子中，只有deentityify方法有权访问字符
 //实体表这个数据对象。
 //
